@@ -126,4 +126,8 @@ Question 8
  D. None of the above
 
 My answers: A, C
-Correct: 
+Correct: A, B, C
+
+Whenever storage variables are read from multiple times, they should be cached in memory to safe gas. This is missing for MAX_APES in mintApe() and startingIndexBlock in setStartingIndex().
+All state variables are zero-initialized by default, therefore there's no need to manually set saleIsActive to false, for example.
+The state variable MAX_APES is only set once during construction and should be immutable to save gas
