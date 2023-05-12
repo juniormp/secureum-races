@@ -1,0 +1,119 @@
+
+“Which statements are true in withdraw()?”
+— 1 of 8
+ A. Can be successfully executed when contract is paused
+    B. User can withdraw only after _minDepositLockTime elapsed since last withdrawal
+ C. Follows checks-effects-interaction pattern best practice
+    D. User can withdraw more than deposited
+
+Correct: D
+
+The require statement right at the start of the function ensures that any attempt to call it will revert when the contract is paused.
+
+The time is not measured since the last withdrawal but since the last deposit.
+
+Does not follow the CEI pattern since calling safeTransferFrom() on the _token is an interaction with an external contract, and effects like the balance update happen after it.
+
+When a user attempts to withdraw an amount larger than their current balance, it'll simply be set to 0 and the requested amount would be send without any issue as long as the user does not attempt to send more tokens than the contract owns.
+
+Solution
+“Which mitigations are applicable to withdraw()?”
+— 2 of 8
+    A. Transferred amount should be minimum of amount and _userBalances[msg.sender]
+    B. Move if/else block before safeTransferFrom
+    C. Require amount to be <= user’s balance deposited earlier
+    D. Remove if/else block and add _userBalances[msg.sender] -= amount before safeTransferFrom
+
+Correct: A, C, D
+
+Checking which one of amount or the actual current balance is smaller, then using that as the amount of tokens to transfer to the user, does indeed seem like an easy way to mitigate the bug allowing to withdraw arbitrary amounts.
+
+Moving the if/else block before safeTransferFrom would bring the function closer to following the CEI pattern. Altough, it likely wouldn't mitigate any exploitable issue, since the _token is set by the deployer and, assuming it follows typical ERC20 implementations, it wouldn't allow for reentrancy by the token receiver. It still wouldn't follow the CEI pattern completely though, since Events too are considered effects.
+
+Using a require to ensure the amount isn't larger than the users actual balance is a more typical way to handle these situations. At least more typical than sending the minimum of amount and the users actual balance instead. With this change, the else block can also be removed since it'll become unreachable.
+
+The last mitigation suggestion makes use of the fact that Solidity ^0.8.0 will automatically check whether there'd be an integer underflow when subtracting the amount from the user's balance. This is likely the most gas efficient solution, although it won't offer a good error message for the user when it happens.
+
+Solution
+“The security concern(s) in pause() is/are:”
+— 3 of 8
+    A. Does not emit an event
+ B. Access control is not strict enough
+ C. Will always revert
+ D. None of the above
+
+Correct: A
+
+The general best practice is, that all state changing functions should emit an event. This is especially true for functions that one wants to monitor off-chain, the pause/unpause functions being a perfect example for that.
+
+The access control is actually very strict. So strict in fact that the pause() function will always revert unless both _operator and _governance are the same address. The inline comment makes it clear that this behavior is unintentional and a bug.
+
+But the constructor isn't preventing both from being the same address and even then, anyone can call changeGovernance() and make it the same. So claiming it would always revert isn't correct either.
+
+Solution
+“Which statement(s) is/are true for unpause()?”
+— 4 of 8
+ A. Will unpause deposits and withdrawals
+    B. Will unpause withdrawals only
+    C. Anyone can successfully call the function
+ D. None of the above
+
+Correct: B, C 
+
+Although the withdraw() function does, the deposit() function does not ensure that nobody can use it while the contract is paused. The best practice would be, if possible, to have it the other way around. When a contract needs to be paused due to an emergency, such as a discovered bug, it should become impossible for users to deposit new funds into the vulnerable contract while still allowing users to withdraw their funds.
+
+Even though unpause() function appears to correctly require the caller to be the _governance address, anyone can call changeGovernance() to set it to themselves.
+
+Solution
+“Which statement(s) is/are true in depositFor()?”
+— 5 of 8
+    A. Can be executed when contract is paused
+    B. Allows a user to deposit for another user
+ C. Allows a user to fund the deposit for another user
+ D. None of the above
+
+Correct A, B
+
+Although the withdraw() function does, the deposit() function does not ensure that nobody can use it while the contract is paused. The best practice would be, if possible, to have it the other way around. When a contract needs to be paused due to an emergency, such as a discovered bug, it should become impossible for users to deposit new funds into the vulnerable contract while still allowing users to withdraw their funds.
+
+In order to make a deposit for another user, that user needs to have approved the contract to make use of their tokens. It's not possible for one user to use their funds for a deposit for another user.
+
+Solution
+“The issue(s) in depositFor() is/are:”
+— 6 of 8
+    A. Cannot be paused for emergency
+ B. Exploitable re-entrancy attack
+    C. User withdrawals can be delayed indefinitely via DoS attack
+ D. None of the above
+Solution
+
+Correct: A, C
+
+Although the withdraw() function does, the deposit() function does not ensure that nobody can use it while the contract is paused. The best practice would be, if possible, to have it the other way around. When a contract needs to be paused due to an emergency, such as a discovered bug, it should become impossible for users to deposit new funds into the vulnerable contract while still allowing users to withdraw their funds.
+
+The only external call made is one to the _token. The token is chosen by the operator and, assuming that it can be trusted and doesn't behave in an unexpected way, there should be no other external call that give the caller an opportunity to re-enter.
+
+There's indeed an opportunity to Deny another user the Service to withdraw their funds. That is because anyone can call the function with an amount of 0 and the victim's address as depositor. In that case, no matter whether the victim has an open allowance with the contract, an attacker can keep increasing _userLastDeposit indefinitely to delay when the withdrawal is possible. The attacker would have to regularly keep calling the function and pay for the gas that uses though.
+
+“Which of the following statement(s) is/are true?”
+— 7 of 8
+ A. Withdraw event is emitted with incorrect amount
+    B. Withdraw event is emitted with correct user
+ C. Deposit event is always emitted incorrectly
+    D. Deposit event is emitted with incorrect user
+
+Correct: B, D
+
+The event emitted during withdrawal appears to be used correctly.
+
+It seems more correct to log the user that the deposit is being made for instead of the calling address.
+
+Solution
+“Potential gas optimization(s) is/are:”
+— 8 of 8
+    A. Use immutable for all variables assigned in constructor
+ B. Use immutable for _token, _operator and _minDepositLockTime
+ C. Use unchecked
+ D. None of the above
+
+Correct: B, C
