@@ -1,3 +1,7 @@
+Number of Runners: 106
+Median Score: 5.6/8
+My Points: Points 5
+Top Score: 8/8
 
 “Which statements are true in withdraw()?”
 — 1 of 8
@@ -6,7 +10,7 @@
  C. Follows checks-effects-interaction pattern best practice
     D. User can withdraw more than deposited
 
-Correct: D
+Correct: D -> 0
 
 The require statement right at the start of the function ensures that any attempt to call it will revert when the contract is paused.
 
@@ -24,7 +28,7 @@ Solution
     C. Require amount to be <= user’s balance deposited earlier
     D. Remove if/else block and add _userBalances[msg.sender] -= amount before safeTransferFrom
 
-Correct: A, C, D
+Correct: A, C, D -> 0
 
 Checking which one of amount or the actual current balance is smaller, then using that as the amount of tokens to transfer to the user, does indeed seem like an easy way to mitigate the bug allowing to withdraw arbitrary amounts.
 
@@ -37,12 +41,12 @@ The last mitigation suggestion makes use of the fact that Solidity ^0.8.0 will a
 Solution
 “The security concern(s) in pause() is/are:”
 — 3 of 8
-    A. Does not emit an event
+    A. Does not emit an event 
  B. Access control is not strict enough
  C. Will always revert
  D. None of the above
 
-Correct: A
+Correct: A -> 1
 
 The general best practice is, that all state changing functions should emit an event. This is especially true for functions that one wants to monitor off-chain, the pause/unpause functions being a perfect example for that.
 
@@ -58,7 +62,7 @@ Solution
     C. Anyone can successfully call the function
  D. None of the above
 
-Correct: B, C 
+Correct: B, C -> 1
 
 Although the withdraw() function does, the deposit() function does not ensure that nobody can use it while the contract is paused. The best practice would be, if possible, to have it the other way around. When a contract needs to be paused due to an emergency, such as a discovered bug, it should become impossible for users to deposit new funds into the vulnerable contract while still allowing users to withdraw their funds.
 
@@ -72,7 +76,7 @@ Solution
  C. Allows a user to fund the deposit for another user
  D. None of the above
 
-Correct A, B
+Correct A, B -> 1
 
 Although the withdraw() function does, the deposit() function does not ensure that nobody can use it while the contract is paused. The best practice would be, if possible, to have it the other way around. When a contract needs to be paused due to an emergency, such as a discovered bug, it should become impossible for users to deposit new funds into the vulnerable contract while still allowing users to withdraw their funds.
 
@@ -87,7 +91,7 @@ Solution
  D. None of the above
 Solution
 
-Correct: A, C
+Correct: A, C -> 1
 
 Although the withdraw() function does, the deposit() function does not ensure that nobody can use it while the contract is paused. The best practice would be, if possible, to have it the other way around. When a contract needs to be paused due to an emergency, such as a discovered bug, it should become impossible for users to deposit new funds into the vulnerable contract while still allowing users to withdraw their funds.
 
@@ -102,7 +106,7 @@ There's indeed an opportunity to Deny another user the Service to withdraw their
  C. Deposit event is always emitted incorrectly
     D. Deposit event is emitted with incorrect user
 
-Correct: B, D
+Correct: B, D -> 1
 
 The event emitted during withdrawal appears to be used correctly.
 
@@ -116,4 +120,14 @@ Solution
  C. Use unchecked
  D. None of the above
 
-Correct: B, C
+Correct: B, C -> 0
+
+
+Se um Q tiver uma única opção como resposta correta, escolher qualquer outra/mais do que isso dá 0 pontos. 
+Por exemplo, se uma pergunta tiver a resposta correta como B e BC foram inseridos, ele receberá 1/2 pontos? - obterá 0 e também escolherá qualquer coisa diferente/mais que B.
+ Isso é presumivelmente para evitar superconjuntos recompensadores de respostas, ou seja, pode-se escolher preguiçosamente ABCD como opções.
+
+2. Se um Q tem mais de uma opção, digamos n opções, como a resposta correta, então a plataforma permite escolher apenas até n opções e os pontos parciais recompensados ​​= 
+#opções-corretas-escolhidas/n. 
+Por exemplo, se uma pergunta tiver respostas corretas como AB, e a pessoa escolheu ABD, ela obterá 2/3 pontos? — isso não é permitido porque apenas 2 opções podem ser escolhidas; 
+Se uma pergunta tiver respostas corretas como BC e B foi inserido, ele receberá 1/2 pontos? - obterá 1/2.
